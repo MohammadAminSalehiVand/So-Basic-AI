@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "K1wFwhmTJ+k=",
+  "success": true,
+  "projectFilePath": "E:\\C#\\MyFirstApp\\MyFirstApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\RenderKar\\.nuget\\packages\\htmlagilitypack\\1.12.1\\htmlagilitypack.1.12.1.nupkg.sha512"
+  ],
+  "logs": []
+}

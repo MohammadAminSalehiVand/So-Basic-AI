@@ -1,0 +1,94 @@
+﻿// using System;
+// using System.Net.Http;
+// using System.Threading.Tasks;
+// using System.IO;
+// using HtmlAgilityPack;
+// using System.Diagnostics;
+// using System.Text.Json;
+
+// class WebCrawler
+// {
+//     static async Task Main()
+//     {
+//         string url = "https://fa.wikipedia.org/wiki/%D8%AC%D9%86%DA%AF_%D8%AC%D9%87%D8%A7%D9%86%DB%8C";
+//         string filePath = "paragraphs.txt";
+//         using HttpClient client = new HttpClient();
+
+//         Stopwatch stopwatch = new Stopwatch();
+//         stopwatch.Start();
+
+//         try
+//         {
+//             string htmlContent = await client.GetStringAsync(url);
+
+//             if (string.IsNullOrEmpty(htmlContent))
+//             {
+//                 Console.WriteLine("صفحه خالی یا نامعتبر است.");
+//                 return;
+//             }
+
+//             HtmlDocument doc = new HtmlDocument();
+//             doc.LoadHtml(htmlContent);
+
+//             HtmlNodeCollection paras = doc.DocumentNode.SelectNodes("//p");
+//             using StreamWriter writer = new StreamWriter(filePath);
+
+//             if (paras != null)
+//             {
+//                 foreach (HtmlNode p in paras)
+//                 {
+//                     if (p != null)
+//                     {
+//                         string label = p.InnerText.Trim();
+//                         label = System.Text.RegularExpressions.Regex.Replace(label, @"[^\u0600-\u06FFa-zA-Z0-9\s]", "");
+//                         label = label.Replace("\n", " ");
+
+//                         if (!string.IsNullOrEmpty(label))
+//                         {
+//                             writer.WriteLine(label);
+//                         }
+//                     }
+//                 }
+
+//                 SentenceLearner learningObject;
+//                 if (File.Exists("LearningObject.json"))
+//                 {
+//                     Console.WriteLine("File founded!");
+//                     string jsonText = File.ReadAllText("LearningObject.json");
+//                     learningObject = JsonSerializer.Deserialize<SentenceLearner>(jsonText);
+//                     if (learningObject == null)
+//                         learningObject = new SentenceLearner();
+//                 }
+//                 else
+//                 {
+//                     Console.WriteLine("File not founded!");
+//                     learningObject = new SentenceLearner();
+//                 }
+
+//                 // صدا زدن متدهای async با await
+//                 await learningObject.SentenceLearnerPlus(url);
+//                 await learningObject.LearningAllLinks(url);
+//             }
+//             else
+//             {
+//                 writer.WriteLine("هیچ پاراگرافی در صفحه پیدا نشد.");
+//             }
+
+//             Console.WriteLine($"✅ اطلاعات داخل فایل '{filePath}' ذخیره شد!");
+//         }
+//         catch (HttpRequestException ex)
+//         {
+//             Console.WriteLine($"خطا در دریافت صفحه: {ex.Message}");
+//         }
+//         catch (Exception ex)
+//         {
+//             Console.WriteLine($"یک خطای غیرمنتظره رخ داد: {ex.Message}");
+//         }
+
+//         stopwatch.Stop();
+//         TimeSpan elapsedTime = stopwatch.Elapsed;
+
+//         Console.WriteLine($"⏱️ پردازش خزنده وب {elapsedTime.TotalSeconds} ثانیه طول کشید.");
+//         Console.WriteLine($"فایل ذخیره شده: {filePath}");
+//     }
+// }

@@ -1,0 +1,17 @@
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.GeneratedMSBuildEditorConfig.editorconfig
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.AssemblyInfoInputs.cache
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.AssemblyInfo.cs
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.csproj.CoreCompileInputs.cache
+E:\C#\MyFirstApp\bin\Debug\net9.0\MyFirstApp.exe
+E:\C#\MyFirstApp\bin\Debug\net9.0\MyFirstApp.deps.json
+E:\C#\MyFirstApp\bin\Debug\net9.0\MyFirstApp.runtimeconfig.json
+E:\C#\MyFirstApp\bin\Debug\net9.0\MyFirstApp.dll
+E:\C#\MyFirstApp\bin\Debug\net9.0\MyFirstApp.pdb
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.dll
+E:\C#\MyFirstApp\obj\Debug\net9.0\refint\MyFirstApp.dll
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.pdb
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.genruntimeconfig.cache
+E:\C#\MyFirstApp\obj\Debug\net9.0\ref\MyFirstApp.dll
+E:\C#\MyFirstApp\bin\Debug\net9.0\HtmlAgilityPack.dll
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.csproj.AssemblyReference.cache
+E:\C#\MyFirstApp\obj\Debug\net9.0\MyFirstApp.csproj.Up2Date

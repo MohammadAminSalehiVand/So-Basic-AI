@@ -1,0 +1,401 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.IO;
+using HtmlAgilityPack;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Numerics;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
+public class WebCrawler
+{
+    public List<string> urlListPersian { get; set; } = new List<string>();
+    public List<string> urlListForgien { get; set; } = new List<string>();
+    public List<string> urlFailedToGet { get; set; } = new List<string>();
+    public List<string> innerHref { get; set; } = new List<string>();
+    private string jsonStopWordsPath = "JsonFiles/nunsenseWords.json";
+    private string jsonObjectPath = "JsonFiles/learningObject.json";
+    public string mainUrl { get; set; } = "";
+    public List<char> englishLetters = new List<char>
+{
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+    's', 't', 'u', 'v', 'w', 'x', 'y', 'z','A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+    'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+    'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+};
+
+    private List<char> persianLetters = new List<char>
+{
+    'ا', 'ب', 'پ', 'ت', 'ث', 'ج', 'چ', 'ح', 'خ',
+    'د', 'ذ', 'ر', 'ز', 'ژ', 'س', 'ش', 'ص', 'ض',
+    'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ک', 'گ', 'ل',
+    'م', 'ن', 'و', 'ه', 'ی', 'آ'
+};
+
+    public WebCrawler()
+    {
+
+    }
+    public async Task WebCrawlerCrator(string url)
+    {
+        await SavingInnerLinks(url);
+        await GettingWebPage(url);
+        if (mainUrl != url)
+        {
+            mainUrl = url;
+        }
+    }
+    public async Task GettingWebPage(string url)
+    {
+        if (this.urlListPersian.Contains(url))
+        {
+            System.Console.WriteLine("We already proccessed this web page! ");
+        }
+        else if (urlListForgien.Contains(url))
+        {
+            System.Console.WriteLine("thiw web page is not persian");
+        }
+        else if (urlListForgien.Contains(url))
+        {
+            System.Console.WriteLine("thiw web page is not Abale to Load");
+        }
+        else
+        {
+            try
+            {
+                using HttpClient client = new HttpClient();
+                string htmlContent = await client.GetStringAsync(url);
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(htmlContent);
+                if (mainUrl == "")
+                {
+                    mainUrl = url;
+                    HtmlDocument primeryDoc = doc;
+                    doc = null;
+                    htmlContent = null;
+                    SeprateProccessing(primeryDoc, url);
+                }
+                else
+                {
+                    HtmlDocument primeryDoc = doc;
+                    doc = null;
+                    htmlContent = null;
+                    SeprateProccessing(primeryDoc, url);
+                }
+            }
+            catch (Exception ex)
+            {
+                urlFailedToGet.Add(url);
+                System.Console.WriteLine(ex.Message);
+            }
+
+        }
+    }
+    private void SeprateProccessing(HtmlDocument doc, string url)
+    {
+        try
+        {
+            HtmlNodeCollection paragraphs = doc.DocumentNode.SelectNodes("//p");
+            // HtmlNodeCollection innerLinks = doc.DocumentNode.SelectNodes("//a@[href]");
+            if (paragraphs != null)
+            {
+                string orginalLabel = "";
+                foreach (HtmlNode p in paragraphs)
+                {
+                    string label = p.InnerText.Trim();
+                    label = System.Text.RegularExpressions.Regex.Replace(label, @"[^\u0600-\u06FF0-9\s]", "");
+                    if (label.Count() > 20)
+                    {
+                        orginalLabel += label;
+                    }
+                }
+                // SavingInnerLinks()
+                PersianChecking(orginalLabel, url);
+            }
+            else
+            {
+                System.Console.WriteLine("Paragraph is empty");
+            }
+
+        }
+        catch
+        {
+            System.Console.WriteLine("Can not find any Links or Paragraphs!!");
+        }
+    }
+    private void PersianChecking(String label, string url)
+    {
+        int englishWords = 0;
+        int persianWords = 0;
+        foreach (char p in label)
+        {
+            if (persianLetters.Contains(p))
+            {
+                persianWords++;
+            }
+            else if (englishLetters.Contains(p))
+            {
+                englishWords++;
+            }
+        }
+        if (englishWords + persianWords != 0)
+        {
+            float persentage = (float)(persianWords / (englishWords + persianWords));
+            if (persentage > 0.85)
+            {
+                this.urlListPersian.Add(url);
+                StopWordsProccessing(label);
+            }
+            else
+            {
+                this.urlListForgien.Add(url);
+                System.Console.WriteLine("it have so many English words !!");
+            }
+        }
+        else
+        {
+            this.urlListForgien.Add(url);
+            System.Console.WriteLine("it have so many forgien words !!");
+        }
+    }
+    private async Task StopWordsProccessing(string text)
+    {
+        List<string> wordsList = text
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .ToList();
+        Dictionary<string, int> stopWords = new Dictionary<string, int>();
+        foreach (string word in wordsList)
+        {
+            if (stopWords.ContainsKey(word))
+            {
+                stopWords[word]++;
+            }
+            else
+            {
+                stopWords.TryAdd(word, 1);
+            }
+        }
+        int step = wordsList.Count / 30;
+        if (step > 5)
+        {
+            foreach (var p in stopWords)
+            {
+                if (p.Value < step || p.Key.Length > 4)
+                {
+                    stopWords.Remove(p.Key);
+                }
+            }
+            if (stopWords != null)
+            {
+                await Merging(stopWords);
+            }
+
+        }
+        else
+        {
+            System.Console.WriteLine("this page is not usefull");
+        }
+    }
+    public async Task StopWordsCleanning()
+    {
+        Dictionary<string, int> stopWords = new Dictionary<string, int>();
+        string jsonText = File.ReadAllText(jsonStopWordsPath);
+        stopWords = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonText);
+        int sumValues = 0;
+        if (stopWords != null)
+        {
+            foreach (var p in stopWords)
+            {
+                sumValues += p.Value;
+            }
+            double middleStopWordsDict = sumValues / stopWords.Count;
+            foreach (var p in stopWords)
+            {
+                if (middleStopWordsDict * (3f / 8f) > p.Value)
+                {
+                    stopWords.Remove(p.Key);
+                }
+            }
+            await MergingForCleanning(stopWords);
+        }
+    }
+    private async Task MergingForCleanning(Dictionary<string, int> stopWords)
+    {
+        string jsonText = JsonSerializer.Serialize(stopWords, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(jsonStopWordsPath, jsonText);
+    }
+    private async Task Merging(Dictionary<string, int> stopWords)
+    {
+        Dictionary<string, int> loadedDict = new Dictionary<string, int>();
+        if (!File.Exists(jsonStopWordsPath))
+        {
+            string jsonText = JsonSerializer.Serialize(stopWords, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(jsonStopWordsPath, jsonText);
+            await SavingTheObject();
+        }
+        else
+        {
+            try
+            {
+                string jsonText = File.ReadAllText(jsonStopWordsPath);
+                loadedDict = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonText);
+                if (loadedDict != null)
+                {
+                    foreach (var pair in loadedDict)
+                    {
+                        if (!stopWords.ContainsKey(pair.Key))
+                        {
+                            stopWords[pair.Key] = pair.Value;
+                        }
+                        else
+                        {
+                            stopWords[pair.Key] += pair.Value;
+                        }
+                    }
+                    jsonText = JsonSerializer.Serialize(stopWords);
+                    File.WriteAllText(jsonStopWordsPath, jsonText);
+                    await SavingTheObject();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex);
+                System.Console.WriteLine("Could not read he file");
+            }
+        }
+    }
+    public async Task ProccessinLinks()
+    {
+        foreach (string link in this.innerHref)
+        {
+            string input = @link;
+            string output = Regex.Replace(input, @"\\u([0-9A-Fa-f]{4})", m =>
+            {
+                string hex = m.Groups[1].Value;
+                int code = Convert.ToInt32(hex, 16);
+                char unicodeChar = (char)code;
+                return unicodeChar.ToString();
+            });
+            if (output.Contains(";"))
+            {
+                output = output.Substring(0, output.IndexOf(";"));
+            }
+            System.Console.WriteLine(output);
+            await GettingWebPage(output);
+            this.innerHref = [];
+            await SavingTheObject();
+        }
+    }
+    private async Task SavingTheObject()
+    {
+        WebCrawlerData data = new WebCrawlerData
+        {
+            urlListPersian = this.urlListPersian,
+            urlListForgien = this.urlListForgien,
+            innerHref = this.innerHref,
+            mainUrl = this.mainUrl,
+            urlFailedToGet = this.urlFailedToGet
+        };
+
+        string jsontext = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(jsonObjectPath, jsontext);
+    }
+    private async Task SavingInnerLinks(string url)
+    {
+        using HttpClient client = new HttpClient();
+        string htmlContent = await client.GetStringAsync(url);
+        HtmlDocument doc = new HtmlDocument();
+        doc.LoadHtml(htmlContent);
+        try
+        {
+            HtmlNodeCollection innerLinks = doc.DocumentNode.SelectNodes("//a[@href]");
+            if (innerLinks != null)
+            {
+                foreach (var link in innerLinks)
+                {
+                    string linkText = link.GetAttributeValue("href", "");
+                    if (!string.IsNullOrEmpty(linkText))
+                    {
+                        if (!linkText.Contains(";uselang=") && !linkText.StartsWith("#"))
+                        {
+                            if (linkText.StartsWith("/wiki") || linkText.StartsWith("/w/"))
+                            {
+                                linkText = "https://fa.wikipedia.org/" + linkText;
+                            }
+                            if (linkText.Contains("//fa."))
+                            {
+                                if (!linkText.StartsWith("http"))
+                                {
+                                    linkText = "https:" + linkText;
+                                }
+                                this.innerHref.Add(linkText);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("Its null!!!");
+            }
+        }
+        catch (Exception ex)
+        {
+
+            System.Console.WriteLine(ex);
+            System.Console.WriteLine("Somthing went wrong!!!");
+        }
+
+    }
+}
+//     private List<string> innerHref = new List<string>();
+//     private string jsonStopWordsPath = "JsonFiles/nunsenseWords.json";
+//     private string jsonObjectPath = "JsonFiles/learningObject.json";
+//     public HtmlDocument mainDocument = new HtmlDocument();
+//     private List<char> englishLetters = new List<char>
+// {
+//     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+//     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+//     's', 't', 'u', 'v', 'w', 'x', 'y', 'z','A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+//     'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+//     'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+// };
+
+//     private List<char> persianLetters = new List<char>
+// {
+//     'ا', 'ب', 'پ', 'ت', 'ث', 'ج', 'چ', 'ح', 'خ',
+//     'د', 'ذ', 'ر', 'ز', 'ژ', 'س', 'ش', 'ص', 'ض',
+//     'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ک', 'گ', 'ل',
+//     'م', 'ن', 'و', 'ه', 'ی', 'آ'
+// };
+public class WebCrawlerData
+{
+    public List<string> urlListPersian { get; set; }
+    public List<string> urlListForgien { get; set; }
+    public Dictionary<string, int> StopWords { get; set; }
+    public List<string> urlFailedToGet { get; set; }
+
+    public List<string> innerHref { get; set; } = new List<string>();
+    public string jsonStopWordsPath { get; set; } = "JsonFiles/nunsenseWords.json";
+    public string jsonObjectPath { get; set; } = "JsonFiles/learningObject.json";
+    public string mainUrl { get; set; } = "";
+    public List<char> englishLetters { get; set; } = new List<char>
+{
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+    's', 't', 'u', 'v', 'w', 'x', 'y', 'z','A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+    'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+    'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+};
+
+    public List<char> persianLetters { get; set; } = new List<char>
+{
+    'ا', 'ب', 'پ', 'ت', 'ث', 'ج', 'چ', 'ح', 'خ',
+    'د', 'ذ', 'ر', 'ز', 'ژ', 'س', 'ش', 'ص', 'ض',
+    'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ک', 'گ', 'ل',
+    'م', 'ن', 'و', 'ه', 'ی', 'آ'
+};
+}

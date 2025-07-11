@@ -1,0 +1,4 @@
+E:\C#\MyFirstApp\obj\Debug\net8.0\MyFirstApp.GeneratedMSBuildEditorConfig.editorconfig
+E:\C#\MyFirstApp\obj\Debug\net8.0\MyFirstApp.AssemblyInfoInputs.cache
+E:\C#\MyFirstApp\obj\Debug\net8.0\MyFirstApp.AssemblyInfo.cs
+E:\C#\MyFirstApp\obj\Debug\net8.0\MyFirstApp.csproj.CoreCompileInputs.cache
