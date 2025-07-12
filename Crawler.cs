@@ -8,6 +8,9 @@ using System.Text.Json;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
+using System.Net;
+
 
 public class WebCrawler
 {
@@ -54,6 +57,7 @@ public class WebCrawler
             WordsRecognition objectWord = new WordsRecognition();
             objectWord.WordsRecognitionCreator();
         }
+        File.WriteAllText(jsonStopWordsPath, " ");
     }
     public async Task GettingWebPage(string url)
     {
@@ -241,15 +245,19 @@ public class WebCrawler
                 loadedDict = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonText);
                 if (loadedDict != null)
                 {
-                    foreach (var pair in loadedDict)
+                    if (!(loadedDict.Count() == 0))
                     {
-                        if (!stopWords.ContainsKey(pair.Key))
+
+                        foreach (var pair in loadedDict)
                         {
-                            stopWords[pair.Key] = pair.Value;
-                        }
-                        else
-                        {
-                            stopWords[pair.Key] += pair.Value;
+                            if (!stopWords.ContainsKey(pair.Key))
+                            {
+                                stopWords[pair.Key] = pair.Value;
+                            }
+                            else
+                            {
+                                stopWords[pair.Key] += pair.Value;
+                            }
                         }
                     }
                     jsonText = JsonSerializer.Serialize(stopWords);
@@ -260,7 +268,7 @@ public class WebCrawler
             catch (Exception ex)
             {
                 System.Console.WriteLine(ex);
-                System.Console.WriteLine("Could not read he file");
+                System.Console.WriteLine("Could not read the file");
             }
         }
     }
@@ -282,7 +290,12 @@ public class WebCrawler
                 {
                     output = output.Substring(0, output.IndexOf(";"));
                 }
+                Process currentProcess = Process.GetCurrentProcess();
+                long memoryUsed = currentProcess.WorkingSet64;
+                TimeSpan cpuTime = currentProcess.TotalProcessorTime;
                 System.Console.WriteLine(output);
+                Console.WriteLine($"\nRAM: {memoryUsed / (1024 * 1024)} MB");
+                Console.WriteLine($"TIME ON CPU: {cpuTime.TotalMilliseconds} ms\n");
                 await GettingWebPage(output);
                 this.innerHref = [];
                 SavingTheObject();

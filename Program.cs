@@ -70,21 +70,5 @@ public class Program
             }
         }
     }
-    // private static async Task<string> LearningMore(WebCrawler loadedObject)
-    // {
-    //     System.Console.WriteLine("wanna Continue For Deeper Learnning?");
-    //     if (response == "yes")
-    //     {
-    //         await loadedObject.ProccessinLinks();
-    //         await loadedObject.StopWordsCleanning();
-    //         System.Console.WriteLine("Its Done! I leaned Everything!");
-    //     }
-    //     else if (response == "exit")
-    //     {
-    //         System.Console.WriteLine("WE DID IT!!!");
-    //     }
-    //     return response;
-
-    // }
 
 }
