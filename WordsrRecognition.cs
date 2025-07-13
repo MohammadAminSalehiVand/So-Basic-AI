@@ -66,7 +66,6 @@ public class WordsRecognition
     }
     private void NameDetector(Dictionary<string, int> name, int step)
     {
-        System.Console.WriteLine(step);
         float middleStopWordsList = 0;
         foreach (var p in name)
         {
@@ -99,7 +98,6 @@ public class WordsRecognition
     }
     private void CommenDetector(Dictionary<string, int> commen, int step)
     {
-        System.Console.WriteLine(step);
         float middleStopWordsList = 0;
         foreach (var p in commen)
         {
@@ -132,7 +130,6 @@ public class WordsRecognition
     }
     private void StopDetector(Dictionary<string, int> stop, int step)
     {
-        System.Console.WriteLine(step);
         float middleStopWordsList = 0;
         foreach (var p in stop)
         {
