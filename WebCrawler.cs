@@ -16,6 +16,7 @@ public class CrawlerWikiPedia
     public List<string> urlListForgien { get; set; } = new List<string>();
     public List<string> urlFailedToGet { get; set; } = new List<string>();
     public List<string> innerHref { get; set; } = new List<string>();
+    public List<string> innerHrefTemp = new List<string>();
     public string mainUrl { get; set; } = "";
     private string proccessingUrl = "";
     private string jsonObjectPath = "JsonFiles/learningObject.json";
@@ -38,9 +39,11 @@ public class CrawlerWikiPedia
                     this.urlListPersian = loadedObject.urlListPersian;
                     this.innerHref = loadedObject.innerHref;
                     this.mainUrl = loadedObject.mainUrl;
+                    loadedObject = null!;
                 }
             }
 
+            // Filling minUrl
             if (this.mainUrl == "" || this.mainUrl == null)
             {
                 System.Console.WriteLine("Main Url is emprty please Enter a New one => ");
@@ -64,6 +67,7 @@ public class CrawlerWikiPedia
                     }
                 }
             }
+            // Filling minUrl
             await DetectingTheInnerLinks();
             await GettingWebPageInformation(this.mainUrl);
             System.Console.WriteLine("your Main url has Learned. you can proccess your inner links too. do you want? (say [y])");
@@ -176,35 +180,33 @@ public class CrawlerWikiPedia
     }
     private async Task ProccessingTheInnerLinks()
     {
-        if (this.innerHref != null)
+        innerHrefTemp = innerHref.ToList();
+        this.innerHref.Clear();
+        if ((this.innerHrefTemp != null) && (this.innerHrefTemp.Count != 0))
         {
-            if (this.innerHref.Count != 0)
+            foreach (string link in this.innerHrefTemp)
             {
-                foreach (string link in this.innerHref)
+                string input = @link;
+                string output = Regex.Replace(input, @"\\u([0-9A-Fa-f]{4})", m =>
                 {
-                    string input = @link;
-                    string output = Regex.Replace(input, @"\\u([0-9A-Fa-f]{4})", m =>
-                    {
-                        string hex = m.Groups[1].Value;
-                        int code = Convert.ToInt32(hex, 16);
-                        char unicodeChar = (char)code;
-                        return unicodeChar.ToString();
-                    });
-                    if (output.Contains(";"))
-                    {
-                        output = output.Substring(0, output.IndexOf(";"));
-                    }
-                    Process currentProcess = Process.GetCurrentProcess();
-                    long memoryUsed = currentProcess.WorkingSet64;
-                    TimeSpan cpuTime = currentProcess.TotalProcessorTime;
-                    System.Console.WriteLine(output);
-                    Console.WriteLine($"\nRAM: {memoryUsed / (1024 * 1024)} MB");
-                    Console.WriteLine($"TIME ON CPU: {cpuTime.TotalMilliseconds} ms\n");
-                    await GettingWebPageInformation(output);
-                    this.innerHref = [];
-                    SavingThisObject();
-                    ClearingTheNunsenseFile();
+                    string hex = m.Groups[1].Value;
+                    int code = Convert.ToInt32(hex, 16);
+                    char unicodeChar = (char)code;
+                    return unicodeChar.ToString();
+                });
+                if (output.Contains(";"))
+                {
+                    output = output.Substring(0, output.IndexOf(";"));
                 }
+                Process currentProcess = Process.GetCurrentProcess();
+                long memoryUsed = currentProcess.WorkingSet64;
+                TimeSpan cpuTime = currentProcess.TotalProcessorTime;
+                System.Console.WriteLine(output);
+                Console.WriteLine($"\nRAM: {memoryUsed / (1024 * 1024)} MB");
+                Console.WriteLine($"TIME ON CPU: {cpuTime.TotalMilliseconds} ms\n");
+                await GettingWebPageInformation(output);
+                SavingThisObject();
+                ClearingTheNunsenseFile();
             }
         }
         else

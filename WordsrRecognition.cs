@@ -171,13 +171,13 @@ public class WordsRecognition
                 enterIf = 1;
                 maxValue = nameWords[p.Key];
             }
-            if (commenWords.ContainsKey(p.Key) && commenWords.ContainsKey(p.Key))
+            if (commenWords.ContainsKey(p.Key) && (commenWords[p.Key] > maxValue))
             {
                 enterIf = 2;
                 maxValue = commenWords[p.Key];
 
             }
-            if (stopWordsFinalList.ContainsKey(p.Key) && stopWordsFinalList.ContainsKey(p.Key))
+            if (stopWordsFinalList.ContainsKey(p.Key) && (stopWordsFinalList[p.Key] > maxValue))
             {
                 enterIf = 3;
                 maxValue = stopWordsFinalList[p.Key];
@@ -199,7 +199,7 @@ public class WordsRecognition
             else if (enterIf == 3)
             {
                 nameWords.Remove(p.Key);
-                nameWords.Remove(p.Key);
+                commenWords.Remove(p.Key);
             }
         }
     }
